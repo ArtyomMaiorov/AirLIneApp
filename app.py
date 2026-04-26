@@ -154,19 +154,35 @@ if "prediction" in st.session_state:
 
     st.divider()
 
-    # SHAP explanation
-    st.subheader("Why did the model predict this?")
-    st.markdown(
-        "The waterfall plot below shows each feature's contribution to this prediction. "
-        "**Red bars** push the prediction toward *Satisfied*; "
-        "**blue bars** push toward *Neutral/Dissatisfied*. "
-        "The features are ranked by absolute impact."
-    )
-
     X_shap = pd.DataFrame(X_processed, columns=ALL_FEATURE_NAMES)
     shap_values = explainer(X_shap)
 
-    shap_col, _ = st.columns([1, 1])
+    shap_vals = shap_values[0].values
+    sorted_idx = np.argsort(np.abs(shap_vals))[::-1]
+    top3_pos = [(ALL_FEATURE_NAMES[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] > 0][:3]
+    top3_neg = [(ALL_FEATURE_NAMES[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] < 0][:3]
+
+    text_col, shap_col = st.columns([1, 1])
+
+    with text_col:
+        st.subheader("Why did the model predict this?")
+        st.markdown(
+            "The waterfall plot below shows each feature's contribution to this prediction. "
+            "**Red bars** push the prediction toward *Satisfied*; "
+            "**blue bars** push toward *Neutral/Dissatisfied*. "
+            "The features are ranked by absolute impact."
+        )
+        st.subheader("Plain-English Summary")
+        verdict = "satisfied" if prediction == 1 else "neutral or dissatisfied"
+        st.markdown(
+            f"The model predicts this passenger is **{verdict}** with **{max(satisfied_prob, not_satisfied_prob):.1%} confidence**.")
+        if top3_pos:
+            drivers = ", ".join([f"**{n}**" for n, _ in top3_pos])
+            st.markdown(f"The strongest factors pushing toward *Satisfied* were: {drivers}.")
+        if top3_neg:
+            drivers = ", ".join([f"**{n}**" for n, _ in top3_neg])
+            st.markdown(f"The strongest factors pushing toward *Neutral/Dissatisfied* were: {drivers}.")
+
     with shap_col:
         fig_shap, ax_shap = plt.subplots(figsize=(7, 4))
         shap.plots.waterfall(shap_values[0], max_display=15, show=False)
@@ -174,26 +190,6 @@ if "prediction" in st.session_state:
         plt.tight_layout()
         st.pyplot(fig_shap, use_container_width=True)
         plt.close(fig_shap)
-
-    # plain-english summary
-    st.divider()
-    st.subheader("Plain-English Summary")
-
-    shap_vals = shap_values[0].values
-    sorted_idx = np.argsort(np.abs(shap_vals))[::-1]
-    top3_pos = [(ALL_FEATURE_NAMES[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] > 0][:3]
-    top3_neg = [(ALL_FEATURE_NAMES[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] < 0][:3]
-
-    verdict = "satisfied" if prediction == 1 else "neutral or dissatisfied"
-    st.markdown(
-        f"The model predicts this passenger is **{verdict}** with **{max(satisfied_prob, not_satisfied_prob):.1%} confidence**.")
-
-    if top3_pos:
-        drivers = ", ".join([f"**{n}**" for n, _ in top3_pos])
-        st.markdown(f"The strongest factors pushing toward *Satisfied* were: {drivers}.")
-    if top3_neg:
-        drivers = ", ".join([f"**{n}**" for n, _ in top3_neg])
-        st.markdown(f"The strongest factors pushing toward *Neutral/Dissatisfied* were: {drivers}.")
 
 # footer
 st.divider()

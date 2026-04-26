@@ -47,8 +47,8 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("**Demographics & Trip**")
     gender = st.selectbox("Gender",        ["Male", "Female"])
-    customer_type = st.selectbox("Customer Type", ["Loyal Customer", "disloyal Customer"])
-    type_of_travel = st.selectbox("Type of Travel",["Business travel", "Personal Travel"])
+    customer_type = st.selectbox("Customer Type", ["Loyal Customer", "Disloyal Customer"])
+    type_of_travel = st.selectbox("Type of Travel", ["Business travel", "Personal Travel"])
     travel_class = st.selectbox("Class",         ["Business", "Eco Plus", "Eco"])
     age = st.slider("Age", 7, 85, 35)
     flight_distance = st.slider("Flight Distance (miles)", 50, 5000, 1000)
@@ -78,42 +78,51 @@ with col3:
 st.divider()
 
 # predict button
-predict_btn = st.button("🔍 Predict Satisfaction", type="primary", use_container_width=True)
+_, btn_col, _ = st.columns([2, 1, 2])
+with btn_col:
+    predict_btn = st.button("🔍 Predict Satisfaction", type="primary")
 
 if predict_btn:
-    # Build raw input dataframe with same column names as the original dataset
     input_dict = {
-        "Gender":                            gender,
-        "Customer Type":                     customer_type,
-        "Age":                               age,
-        "Type of Travel":                    type_of_travel,
-        "Class":                             travel_class,
-        "Flight Distance":                   flight_distance,
-        "Inflight wifi service":             wifi,
+        "Gender": gender,
+        "Customer Type": customer_type,
+        "Age": age,
+        "Type of Travel": type_of_travel,
+        "Class": travel_class,
+        "Flight Distance": flight_distance,
+        "Inflight wifi service": wifi,
         "Departure/Arrival time convenient": time_conven,
-        "Ease of Online booking":            online_book,
-        "Gate location":                     gate_loc,
-        "Food and drink":                    food_drink,
-        "Online boarding":                   online_board,
-        "Seat comfort":                      seat_comfort,
-        "Inflight entertainment":            entertainment,
-        "On-board service":                  onboard_svc,
-        "Leg room service":                  leg_room,
-        "Baggage handling":                  baggage,
-        "Checkin service":                   checkin,
-        "Inflight service":                  inflight_svc,
-        "Cleanliness":                       cleanliness,
-        "Departure Delay in Minutes":        dep_delay,
-        "Arrival Delay in Minutes":          arr_delay,
+        "Ease of Online booking": online_book,
+        "Gate location": gate_loc,
+        "Food and drink": food_drink,
+        "Online boarding": online_board,
+        "Seat comfort": seat_comfort,
+        "Inflight entertainment": entertainment,
+        "On-board service": onboard_svc,
+        "Leg room service": leg_room,
+        "Baggage handling": baggage,
+        "Checkin service": checkin,
+        "Inflight service": inflight_svc,
+        "Cleanliness": cleanliness,
+        "Departure Delay in Minutes": dep_delay,
+        "Arrival Delay in Minutes": arr_delay,
     }
     input_df = pd.DataFrame([input_dict])
-
-    # preprocess & predict
     X_processed = preprocessor.transform(input_df)
-    prediction  = model.predict(X_processed)[0]
+    prediction = model.predict(X_processed)[0]
     probability = model.predict_proba(X_processed)[0]
 
-    satisfied_prob    = probability[1]
+    st.session_state["prediction"] = int(prediction)
+    st.session_state["probability"] = probability.tolist()
+    st.session_state["X_processed"] = X_processed.tolist()
+
+# display results
+if "prediction" in st.session_state:
+    prediction = st.session_state["prediction"]
+    probability = st.session_state["probability"]
+    X_processed = np.array(st.session_state["X_processed"])
+
+    satisfied_prob = probability[1]
     not_satisfied_prob = probability[0]
 
     # result banner
@@ -126,13 +135,12 @@ if predict_btn:
         else:
             st.error("## ❌ Neutral / Dissatisfied")
 
-        st.metric("Satisfied probability",         f"{satisfied_prob:.1%}")
+        st.metric("Satisfied probability", f"{satisfied_prob:.1%}")
         st.metric("Neutral/Dissatisfied probability", f"{not_satisfied_prob:.1%}")
 
     with res_col2:
-        # probability bar
         fig_bar, ax = plt.subplots(figsize=(5, 1.2))
-        ax.barh([""], [satisfied_prob],     color="#2ecc71", label="Satisfied")
+        ax.barh([""], [satisfied_prob], color="#2ecc71", label="Satisfied")
         ax.barh([""], [not_satisfied_prob], left=[satisfied_prob],
                 color="#e74c3c", label="Neutral/Dissatisfied")
         ax.set_xlim(0, 1)
@@ -160,23 +168,23 @@ if predict_btn:
 
     fig_shap, ax_shap = plt.subplots(figsize=(10, 6))
     shap.plots.waterfall(shap_values[0], max_display=15, show=False)
-    plt.title("SHAP Waterfall. Feature contributions to this prediction", fontsize=12)
+    plt.title("SHAP Waterfall — Feature contributions to this prediction", fontsize=12)
     plt.tight_layout()
     st.pyplot(fig_shap)
     plt.close(fig_shap)
 
-    # plain-english explanation
+    # plain-english summary
     st.divider()
     st.subheader("Plain-English Summary")
 
     shap_vals = shap_values[0].values
-    feat_names = ALL_FEATURE_NAMES
     sorted_idx = np.argsort(np.abs(shap_vals))[::-1]
-    top3_pos = [(feat_names[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] > 0][:3]
-    top3_neg = [(feat_names[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] < 0][:3]
+    top3_pos = [(ALL_FEATURE_NAMES[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] > 0][:3]
+    top3_neg = [(ALL_FEATURE_NAMES[i], shap_vals[i]) for i in sorted_idx if shap_vals[i] < 0][:3]
 
     verdict = "satisfied" if prediction == 1 else "neutral or dissatisfied"
-    st.markdown(f"The model predicts this passenger is **{verdict}** with **{max(satisfied_prob, not_satisfied_prob):.1%} confidence**.")
+    st.markdown(
+        f"The model predicts this passenger is **{verdict}** with **{max(satisfied_prob, not_satisfied_prob):.1%} confidence**.")
 
     if top3_pos:
         drivers = ", ".join([f"**{n}**" for n, _ in top3_pos])

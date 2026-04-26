@@ -196,7 +196,7 @@ if "prediction" in st.session_state:
 # footer
 st.divider()
 st.caption(
-    "Flight Analytics - MSc Machine Learning Group Project. Created by Dina Kaziyeva, Artyom Maiorov, Arlen Maker"
-    "Model: XGBoost (tuned, early stopping)"
-    "Dataset: Airline Passenger Satisfaction from Kaggle"
+    "Flight Analytics - MSc Machine Learning Group Project. Created by Dina Kaziyeva, Artyom Maiorov, Arlen Maker. "
+    "Model: XGBoost (tuned, early stopping). "
+    "Dataset: Airline Passenger Satisfaction from Kaggle."
 )

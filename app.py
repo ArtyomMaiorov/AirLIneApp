@@ -170,7 +170,7 @@ if "prediction" in st.session_state:
     shap.plots.waterfall(shap_values[0], max_display=15, show=False)
     plt.title("SHAP Waterfall — Feature contributions to this prediction", fontsize=12)
     plt.tight_layout()
-    st.pyplot(fig_shap)
+    st.pyplot(fig_shap, use_container_width=True)
     plt.close(fig_shap)
 
     # plain-english summary

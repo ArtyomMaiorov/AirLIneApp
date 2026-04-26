@@ -46,15 +46,15 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("**Demographics & Trip**")
-    gender = st.selectbox("Gender",        ["Male", "Female"])
+    gender = st.selectbox("Gender", ["Male", "Female"])
     customer_type = st.selectbox("Customer Type", ["Loyal Customer", "Disloyal Customer"])
     type_of_travel = st.selectbox("Type of Travel", ["Business travel", "Personal Travel"])
-    travel_class = st.selectbox("Class",         ["Business", "Eco Plus", "Eco"])
+    travel_class = st.selectbox("Class", ["Business", "Eco Plus", "Eco"])
     age = st.slider("Age", 7, 85, 35)
     flight_distance = st.slider("Flight Distance (miles)", 50, 5000, 1000)
 
 with col2:
-    st.markdown("**Service Ratings** (0 = N/A, 1–5 scale)")
+    st.markdown("**Service Ratings** (0-5 scale)")
     wifi = st.slider("Inflight WiFi Service",              0, 5, 3)
     time_conven = st.slider("Departure/Arrival Time Convenient",  0, 5, 3)
     online_book = st.slider("Ease of Online Booking",             0, 5, 3)
@@ -131,9 +131,9 @@ if "prediction" in st.session_state:
 
     with res_col1:
         if prediction == 1:
-            st.success("## ✅ Satisfied")
+            st.success("✅ Satisfied")
         else:
-            st.error("## ❌ Neutral / Dissatisfied")
+            st.error("❌ Neutral / Dissatisfied")
 
         st.metric("Satisfied probability", f"{satisfied_prob:.1%}")
         st.metric("Neutral/Dissatisfied probability", f"{not_satisfied_prob:.1%}")
@@ -147,7 +147,7 @@ if "prediction" in st.session_state:
         ax.set_xlabel("Probability")
         ax.axvline(0.5, color="white", linewidth=1.5, linestyle="--")
         ax.legend(loc="upper right", fontsize=8)
-        ax.set_title("Predicted probability split", fontsize=10)
+        ax.set_title("Predicted probability", fontsize=10)
         fig_bar.tight_layout()
         st.pyplot(fig_bar)
         plt.close(fig_bar)
@@ -166,7 +166,7 @@ if "prediction" in st.session_state:
     X_shap = pd.DataFrame(X_processed, columns=ALL_FEATURE_NAMES)
     shap_values = explainer(X_shap)
 
-    fig_shap, ax_shap = plt.subplots(figsize=(10, 6))
+    fig_shap, ax_shap = plt.subplots(figsize=(7, 4))
     shap.plots.waterfall(shap_values[0], max_display=15, show=False)
     plt.title("SHAP Waterfall — Feature contributions to this prediction", fontsize=12)
     plt.tight_layout()
@@ -196,7 +196,7 @@ if "prediction" in st.session_state:
 # footer
 st.divider()
 st.caption(
-    "Flight Analytics - MSc Machine Learning Group Project"
+    "Flight Analytics - MSc Machine Learning Group Project. Created by Dina Kaziyeva, Artyom Maiorov, Arlen Maker"
     "Model: XGBoost (tuned, early stopping)"
     "Dataset: Airline Passenger Satisfaction from Kaggle"
 )

@@ -184,8 +184,8 @@ if "prediction" in st.session_state:
             st.markdown(f"The strongest factors pushing toward *Neutral/Dissatisfied* were: {drivers}.")
 
     with shap_col:
-        fig_shap, ax_shap = plt.subplots(figsize=(7, 4))
-        shap.plots.waterfall(shap_values[0], max_display=15, show=False)
+        fig_shap, ax_shap = plt.subplots(figsize=(7, 3))
+        shap.plots.waterfall(shap_values[0], max_display=12, show=False)
         plt.title("SHAP Waterfall — Feature contributions to this prediction", fontsize=12)
         plt.tight_layout()
         st.pyplot(fig_shap, use_container_width=True)
